@@ -33,7 +33,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # LLM
 llm = ChatGroq(
-    model="llama-3.3-70b-versatile"
+    # llama-3.3-70b-versatile was retired on Groq; override with GROQ_MODEL if needed
+    model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 )
 
 # State
@@ -138,10 +139,17 @@ graph.add_edge("itinerary_agent", "final_agent")
 graph.add_edge("final_agent", END)
 
 
-# Persistent connection so both CLI and Streamlit can share the compiled app
-_conn = psycopg.connect(DATABASE_URL)
-checkpointer = PostgresSaver(_conn)
-checkpointer.setup()
+# Persistent connection so both CLI and Streamlit can share the compiled app.
+# Falls back to in-memory checkpointing if PostgreSQL is unreachable.
+try:
+    _conn = psycopg.connect(DATABASE_URL, autocommit=True, connect_timeout=10)
+    checkpointer = PostgresSaver(_conn)
+    checkpointer.setup()
+except Exception as e:
+    print(f"[warning] PostgreSQL unavailable ({type(e).__name__}); "
+          "using in-memory memory instead (history is lost on restart).")
+    from langgraph.checkpoint.memory import InMemorySaver
+    checkpointer = InMemorySaver()
 
 app = graph.compile(checkpointer=checkpointer)
 

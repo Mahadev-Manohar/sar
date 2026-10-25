@@ -12,7 +12,7 @@ The system uses 4 AI agents that work together to plan a complete trip automatic
 - 🤖 Final Response Agent
 - 🧠 Memory using PostgreSQL
 - 🌐 Real-time API Integration
-- 💻 Streamlit Web Interface
+- 💻 React Web Interface
 
 ---
 
@@ -23,7 +23,8 @@ The system uses 4 AI agents that work together to plan a complete trip automatic
 - Groq
 - Llama 3.3 70B
 - PostgreSQL
-- Streamlit
+- React + Vite
+- Starlette (API)
 - Tavily API
 - AviationStack API
 
@@ -129,13 +130,22 @@ This will test the multi-agent system through the terminal.
 
 ---
 
-#### Run Streamlit Web App
+#### Run the React Web App
 
+The UI lives in `frontend/` (React + Vite) and talks to a small API in `api.py`.
 
-		streamlit run frontend.py
+Terminal 1 — API (port 8010):
 
+		pip install uvicorn starlette
+		uvicorn api:api --port 8010
 
-This will launch the Multi-Agent AI web application.
+Terminal 2 — frontend (http://localhost:5173):
+
+		cd frontend
+		npm install
+		npm run dev
+
+Vite proxies `/api` to the backend, so no extra configuration is needed.
 
 ---
 
